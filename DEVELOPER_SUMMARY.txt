@@ -1,0 +1,81 @@
+Project: reservation_app_backend
+Path: /home/mohamed/PROJECTS/reservation_app_backend
+
+Summary of work done (current state)
+-----------------------------------
+- Restructured project into a modern Express boilerplate using ES Modules.
+  - src/server.js: application entry. Sets up middleware, dynamically loads route files from src/routes, connects to DB via src/config/db.js, and starts server.
+  - src/routes/: route modules for rooms, bookings, auth.
+  - src/controllers/: controller skeletons (placeholder functions).
+  - src/models/: model placeholders.
+  - src/config/db.js: Postgres Pool using `pg` and SSL settings compatible with Supabase. Exports `pool` and default connect helper.
+
+- Database migrations and seeding
+  - migrations/001_schema.sql: drops/creates tables users, rooms, bookings with keys, constraints, indexes.
+  - migrations/002_seed.sql: inserts sample users, rooms, bookings for testing.
+  - scripts/migrate.js: Node runner that applies migrations in order using DATABASE_URL and SSL; transactional per-file.
+  - I executed the migration runner against your Supabase DB (connection string you provided). Both migrations applied successfully.
+
+- Implemented route functionality backed by the DB (SQL queries via pool):
+  - Rooms (src/routes/roomsRoutes.js): GET /rooms, GET /rooms/:id, POST /rooms, PUT /rooms/:id, DELETE /rooms/:id
+  - Bookings (src/routes/bookingsRoutes.js): GET /book, GET /book/:id, POST /book (checks overlap using tstzrange), DELETE /book/:id
+  - Auth (src/routes/authRoutes.js): POST /auth/register, POST /auth/login (bcryptjs for password hashing)
+
+- package.json updated:
+  - "type": "module"
+  - scripts: "start": "node src/server.js", "migrate": "node scripts/migrate.js"
+  - dependencies: express, pg, bcryptjs, dotenv, cors
+
+How to run locally (quick)
+--------------------------
+1. Ensure Node.js v16+ (recommended v20). Use nvm if needed (there's .nvmrc set to 20).
+2. Install dependencies:
+   npm install
+3. Provide DB connection in env (Supabase example) by creating .env in repo root:
+   DATABASE_URL='postgresql://<user>:<pw>@<host>:<port>/postgres?sslmode=require'
+4. Start server:
+   npm start
+5. Run migrations (applies schema + seed):
+   npm run migrate
+
+Main endpoints (for testing)
+----------------------------
+- Health: GET /
+- Rooms
+  - GET /rooms
+  - GET /rooms/:id
+  - POST /rooms  {name, capacity, description}
+  - PUT /rooms/:id
+  - DELETE /rooms/:id
+- Bookings
+  - GET /book[?room_id=1]
+  - GET /book/:id
+  - POST /book {room_id, user_id, start_time, end_time, notes}
+  - DELETE /book/:id
+- Auth
+  - POST /auth/register {email, name, password}
+  - POST /auth/login {email, password}
+
+Notes, caveats, and recommendations
+----------------------------------
+- The DB code currently uses `ssl: { rejectUnauthorized: false }` to work with Supabase without CA. For production, provide CA or set stricter validation.
+- The migration SQL currently drops and recreates tables (destructive). Back up production data before running.
+- Login is sessionless and returns basic user info. For production, issue JWTs or use server-side sessions.
+- Add input validation, centralized error handling, logging, rate-limiting, and tests before production use.
+
+Suggested next tasks
+--------------------
+1. Add request validation (Joi or celebrate) and an error middleware.
+2. Add JWT-based auth and protect booking endpoints.
+3. Implement full controllers using parameterized queries and move SQL strings to a query layer.
+4. Add tests (integration tests hitting a test DB) and CI steps running migrations on a test instance.
+
+Contact info for handoff
+------------------------
+Repository path: /home/mohamed/PROJECTS/reservation_app_backend
+Start command: npm start
+Migrations: npm run migrate
+
+If the AI/dev taking over needs runnable test flows, I can add a bash test script that exercises register -> login -> list rooms -> create booking -> conflict test.
+
+End of summary

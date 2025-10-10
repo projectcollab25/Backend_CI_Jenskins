@@ -1,0 +1,12 @@
+nohup: ignoring input
+
+> reservation_app_backend@1.0.0 start
+> node src/server.js
+
+[dotenv@17.2.3] injecting env (2) from .env -- tip: ⚙️  specify custom .env file path with { path: '/custom/path/.env' }
+Postgres pool created
+Postgres connected
+Loaded route authRoutes.js -> /auth
+Loaded route bookingsRoutes.js -> /book
+Loaded route roomsRoutes.js -> /rooms
+🚀 Server running on http://localhost:3000
