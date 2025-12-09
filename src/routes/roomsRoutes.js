@@ -1,16 +1,17 @@
 import express from 'express';
 import { pool } from '../config/db.js';
 import { requireAdmin } from '../middleware/auth.js';
+import { handleDbError } from '../utils/dbError.js';
 
 const router = express.Router();
 
-// GET /rooms - list all rooms
+// GET /products - list all products (backed by `rooms` table)
 router.get('/', async (req, res) => {
   if (!pool) return res.status(500).json({ error: 'DB not configured' });
   const { date } = req.query; // optional YYYY-MM-DD
   try {
     if (date) {
-      // return rooms that have no bookings overlapping the given day
+      // return products (rooms table) that have no bookings overlapping the given day
       const start = `${date}T00:00:00Z`;
       const end = `${date}T23:59:59Z`;
       const q = `
@@ -26,28 +27,26 @@ router.get('/', async (req, res) => {
       return res.json(rows);
     }
     const { rows } = await pool.query('SELECT * FROM rooms ORDER BY id');
-    res.json(rows);
+    return res.json(rows);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Failed to fetch rooms' });
+    return handleDbError(res, err, 'Failed to fetch products');
   }
 });
 
-// GET /rooms/:id - get room by id
+// GET /products/:id - get product by id
 router.get('/:id', async (req, res) => {
   if (!pool) return res.status(500).json({ error: 'DB not configured' });
   const { id } = req.params;
   try {
     const { rows } = await pool.query('SELECT * FROM rooms WHERE id = $1', [id]);
-    if (!rows.length) return res.status(404).json({ error: 'Room not found' });
-    res.json(rows[0]);
+    if (!rows.length) return res.status(404).json({ error: 'Product not found' });
+    return res.json(rows[0]);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Failed to fetch room' });
+    return handleDbError(res, err, 'Failed to fetch product');
   }
 });
 
-// POST /rooms - create room
+// POST /products - create product (creates a row in `rooms` table)
 router.post('/', requireAdmin, async (req, res) => {
   if (!pool) return res.status(500).json({ error: 'DB not configured' });
   const { name, capacity = 1, description } = req.body;
@@ -57,14 +56,13 @@ router.post('/', requireAdmin, async (req, res) => {
       'INSERT INTO rooms (name, capacity, description) VALUES ($1, $2, $3) RETURNING *',
       [name, capacity, description]
     );
-    res.status(201).json(rows[0]);
+    return res.status(201).json(rows[0]);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Failed to create room' });
+    return handleDbError(res, err, 'Failed to create product');
   }
 });
 
-// PUT /rooms/:id - update room
+// PUT /products/:id - update product
 router.put('/:id', async (req, res) => {
   if (!pool) return res.status(500).json({ error: 'DB not configured' });
   const { id } = req.params;
@@ -74,24 +72,22 @@ router.put('/:id', async (req, res) => {
       'UPDATE rooms SET name = COALESCE($1, name), capacity = COALESCE($2, capacity), description = COALESCE($3, description) WHERE id = $4 RETURNING *',
       [name, capacity, description, id]
     );
-    if (!rows.length) return res.status(404).json({ error: 'Room not found' });
-    res.json(rows[0]);
+    if (!rows.length) return res.status(404).json({ error: 'Product not found' });
+    return res.json(rows[0]);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Failed to update room' });
+    return handleDbError(res, err, 'Failed to update product');
   }
 });
 
-// DELETE /rooms/:id - delete room
+// DELETE /products/:id - delete product
 router.delete('/:id', requireAdmin, async (req, res) => {
   if (!pool) return res.status(500).json({ error: 'DB not configured' });
   const { id } = req.params;
   try {
     await pool.query('DELETE FROM rooms WHERE id = $1', [id]);
-    res.status(204).end();
+    return res.status(204).end();
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Failed to delete room' });
+    return handleDbError(res, err, 'Failed to delete product');
   }
 });
 

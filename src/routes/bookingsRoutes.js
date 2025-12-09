@@ -1,5 +1,6 @@
 import express from 'express';
 import { pool } from '../config/db.js';
+import { handleDbError } from '../utils/dbError.js';
 import { requireAdmin, requireAuth } from '../middleware/auth.js';
 
 const router = express.Router();
@@ -49,8 +50,7 @@ router.get('/', requireAdmin, async (req, res) => {
     const { rows } = await pool.query(q, params);
     res.json(rows);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Failed to fetch bookings' });
+    return handleDbError(res, err, 'Failed to fetch bookings');
   }
 });
 
@@ -69,8 +69,7 @@ router.patch('/:id/status', requireAdmin, async (req, res) => {
     const full = await pool.query(fullQ, [id]);
     res.json(full.rows[0]);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Failed to update booking status' });
+    return handleDbError(res, err, 'Failed to update booking status');
   }
 });
 
@@ -87,8 +86,7 @@ router.get('/availability', async (req, res) => {
     const available = r.rows.length === 0;
     res.json({ available });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Availability check failed' });
+    return handleDbError(res, err, 'Availability check failed');
   }
 });
 
@@ -105,7 +103,7 @@ router.get('/my', requireAuth, async (req, res) => {
     res.json(rows);
   } catch (err) {
     console.error('Error fetching bookings for user', user && user.id, err);
-    res.status(500).json({ error: 'Failed to fetch bookings' })
+    return handleDbError(res, err, 'Failed to fetch bookings');
   }
 });
 
@@ -118,8 +116,7 @@ router.get('/:id', async (req, res) => {
     if (!rows.length) return res.status(404).json({ error: 'Booking not found' });
     res.json(rows[0]);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Failed to fetch booking' });
+    return handleDbError(res, err, 'Failed to fetch booking');
   }
 });
 
@@ -176,8 +173,7 @@ router.post('/', async (req, res) => {
     const { rows } = await pool.query(insertQ, [room_id, user_id || null, start_time, end_time, notes]);
     res.status(201).json(rows[0]);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Failed to create booking' });
+    return handleDbError(res, err, 'Failed to create booking');
   }
 });
 
@@ -198,8 +194,7 @@ router.delete('/:id', requireAuth, async (req, res) => {
     await pool.query('DELETE FROM bookings WHERE id = $1', [id]);
     res.status(204).end();
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Failed to delete booking' });
+    return handleDbError(res, err, 'Failed to delete booking');
   }
 });
 

@@ -20,6 +20,34 @@ app.get('/', (req, res) => {
   res.send('Hello, world! 👋 Express is running');
 });
 
+// Health endpoint: checks basic app + DB connectivity and reports image version.
+app.get('/health', async (req, res) => {
+  const info = {
+    status: 'ok',
+    db: 'unknown',
+    backend_image: process.env.IMAGE_VERSION || 'unknown',
+    frontend_image: process.env.FRONTEND_IMAGE_VERSION || 'unknown',
+  }
+  try {
+    // Try a cheap DB check if possible
+    // import the pool lazily so the module load order is safe
+    const { pool } = await import('./config/db.js')
+    if (pool) {
+      try {
+        await pool.query('SELECT 1')
+        info.db = 'ok'
+      } catch (e) {
+        info.db = 'down'
+      }
+    } else {
+      info.db = 'unconfigured'
+    }
+  } catch (err) {
+    info.db = 'error'
+  }
+  res.json(info)
+})
+
 // Dynamically load route modules from src/routes
 // Each route file should default-export an Express Router.
 async function loadRoutes() {
@@ -38,7 +66,9 @@ async function loadRoutes() {
       // Determine mount path from filename (simple heuristics)
       let mountPath = '/' + file.replace(/Routes?\.js$/i, '').replace(/s$/i, '').toLowerCase();
       // Specific shortcuts
-      if (/rooms?/i.test(file)) mountPath = '/rooms';
+      // Expose rooms routes under the new products path (API surface change)
+      // NOTE: route handlers still operate on the underlying `rooms` table.
+      if (/rooms?/i.test(file)) mountPath = '/products';
       if (/book/i.test(file)) mountPath = '/book';
       if (/auth/i.test(file)) mountPath = '/auth';
 
