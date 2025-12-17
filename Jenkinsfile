@@ -55,7 +55,7 @@ pipeline {
                     echo "🐳 Build de l’image Docker backend : ${IMAGE_NAME}:${IMAGE_TAG}"
 
                     sh """
-                        docker build -t ${IMAGE_NAME}:${IMAGE_TAG} -t ${IMAGE_NAME}:latest .
+                        docker build --no-cache -t ${IMAGE_NAME}:${IMAGE_TAG} -t ${IMAGE_NAME}:latest .
                     """
                 }
             }
@@ -69,6 +69,7 @@ pipeline {
                     echo "🔒 Scan Trivy sur l'image ${IMAGE_NAME}:${IMAGE_TAG}"
 
                     sh """
+                        trivy image --clear-cache
                         trivy image --exit-code 1 --severity HIGH,CRITICAL ${IMAGE_NAME}:${IMAGE_TAG}
                     """
                 }
