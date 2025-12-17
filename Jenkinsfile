@@ -50,7 +50,8 @@ pipeline {
         stage('Docker Build') {
             steps {
                 script {
-                    def IMAGE_NAME = "ghcr.io/aminehamzaoui443/reservation-backend"
+                    // Namespace GHCR de l'organisation
+                    def IMAGE_NAME = "ghcr.io/projectcollab25/reservation-backend"
                     def IMAGE_TAG  = "${env.BUILD_NUMBER}"
                     echo "🐳 Build de l’image Docker backend : ${IMAGE_NAME}:${IMAGE_TAG}"
 
@@ -64,7 +65,7 @@ pipeline {
         stage('Trivy Security Scan') {
             steps {
                 script {
-                    def IMAGE_NAME = "ghcr.io/aminehamzaoui443/reservation-backend"
+                    def IMAGE_NAME = "ghcr.io/projectcollab25/reservation-backend"
                     def IMAGE_TAG  = "${env.BUILD_NUMBER}"
                     echo "🔒 Scan Trivy sur l'image ${IMAGE_NAME}:${IMAGE_TAG}"
 
@@ -79,13 +80,13 @@ pipeline {
         stage('Push Docker Image') {
             steps {
                 script {
-                    def IMAGE_NAME = "ghcr.io/aminehamzaoui443/reservation-backend"
+                    def IMAGE_NAME = "ghcr.io/projectcollab25/reservation-backend"
                     def IMAGE_TAG  = "${env.BUILD_NUMBER}"
                     echo "🚀 Push des images ${IMAGE_NAME}:${IMAGE_TAG} et ${IMAGE_NAME}:latest vers GHCR"
 
                     withCredentials([string(credentialsId: 'GITHUB_PAT', variable: 'GITHUB_PAT')]) {
                         sh """
-                            echo \$GITHUB_PAT | docker login ghcr.io -u aminehamzaoui443 --password-stdin
+                            echo \$GITHUB_PAT | docker login ghcr.io -u AmineHamzaoui443 --password-stdin
                             docker push ${IMAGE_NAME}:${IMAGE_TAG}
                             docker push ${IMAGE_NAME}:latest
                         """
