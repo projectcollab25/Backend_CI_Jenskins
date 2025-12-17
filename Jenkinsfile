@@ -50,8 +50,8 @@ pipeline {
         stage('Docker Build') {
             steps {
                 script {
-                    // Namespace GHCR de l'organisation
-                    def IMAGE_NAME = "ghcr.io/projectcollab25/reservation-backend"
+                    // Nouveau nom de package dans l'organisation
+                    def IMAGE_NAME = "ghcr.io/projectcollab25/reservation-backend-jenkins"
                     def IMAGE_TAG  = "${env.BUILD_NUMBER}"
                     echo "🐳 Build de l’image Docker backend : ${IMAGE_NAME}:${IMAGE_TAG}"
 
@@ -65,7 +65,7 @@ pipeline {
         stage('Trivy Security Scan') {
             steps {
                 script {
-                    def IMAGE_NAME = "ghcr.io/projectcollab25/reservation-backend"
+                    def IMAGE_NAME = "ghcr.io/projectcollab25/reservation-backend-jenkins"
                     def IMAGE_TAG  = "${env.BUILD_NUMBER}"
                     echo "🔒 Scan Trivy sur l'image ${IMAGE_NAME}:${IMAGE_TAG}"
 
@@ -80,7 +80,7 @@ pipeline {
         stage('Push Docker Image') {
             steps {
                 script {
-                    def IMAGE_NAME = "ghcr.io/projectcollab25/reservation-backend"
+                    def IMAGE_NAME = "ghcr.io/projectcollab25/reservation-backend-jenkins"
                     def IMAGE_TAG  = "${env.BUILD_NUMBER}"
                     echo "🚀 Push des images ${IMAGE_NAME}:${IMAGE_TAG} et ${IMAGE_NAME}:latest vers GHCR"
 
