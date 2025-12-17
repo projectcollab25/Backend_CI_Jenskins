@@ -39,7 +39,7 @@ pipeline {
                             sonar-scanner \
                               -Dsonar.projectKey=reservation_backend \
                               -Dsonar.sources=./src \
-                              -Dsonar.host.url=http://localhost:9000 \
+                              -Dsonar.host.url=$SONAR_HOST_URL \
                               -Dsonar.login=$SONAR_TOKEN
                         '''
                     }
@@ -69,7 +69,7 @@ pipeline {
                     echo "🔒 Scan Trivy sur l'image ${IMAGE_NAME}:${IMAGE_TAG}"
 
                     sh """
-                        trivy image --clear-cache
+                        trivy clean --scan-cache
                         trivy image --exit-code 1 --severity HIGH,CRITICAL ${IMAGE_NAME}:${IMAGE_TAG}
                     """
                 }
